@@ -31,7 +31,7 @@ void PcapInterface::init(Message *msg)
 void cb(u_char *data, const struct pcap_pkthdr *hdr, const u_char *pkt)
 {
 	std::cout << "pkt received: " << hdr->caplen << std::endl;
-	PcapInterface pcapIntf = reinterpret_cast<PcapInterface *>(data);
+	PcapInterface *pcapIntf = reinterpret_cast<PcapInterface *>(data);
 
 }
 
