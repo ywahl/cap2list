@@ -13,6 +13,7 @@
 
 
 #include "queue.h"
+#include "poll.h"
 
 
 struct SocketInitData {
@@ -40,7 +41,7 @@ class TcpSocket : public virtual Object {
 	int txStopLen;
 
 public:
- TcpSocket(Task *p) : s(-1), srv(false), eventTask(NULL), parentTask(p), parentSocket(NULL), txState(sockRxTxStopped), rxState(sockRxTxStopped) {}
+ TcpSocket(Task *p, EpollTask *evtTsk) : s(-1), srv(false), eventTask(evtTsk), parentTask(p), parentSocket(NULL), txState(sockRxTxStopped), rxState(sockRxTxStopped) {}
         TcpSocket(TcpSocket *parentSocket, int p);
 	~TcpSocket();
 

@@ -46,6 +46,8 @@ public:
 	Configuration config;
 
 	Task(System *s, const char *n) : system(s), id(n) { system->registerTask(this);};
+	Task(const char *n) : system(NULL), id(n) {}
+
 	virtual void execute(Message *) = 0;
 	ExecutorAction executeAction(Message *msg);
 

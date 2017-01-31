@@ -93,6 +93,7 @@ void TaskList::addTask(Task *t)
 	taskList.push_back(t);
 }
 
+
 Task *BasicSystem::getTask(const char *name)
 {
 	for (auto task : taskList) {
