@@ -16,7 +16,7 @@
 #include "pcapintf.h"
 
 
-int main(int argc, char *argv[])
+int man(int argc, char *argv[])
 {
 	int opt;
 	bool server = true;

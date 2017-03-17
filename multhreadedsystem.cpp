@@ -24,7 +24,7 @@ class SingleThreadSystem : public BasicSystem {
 	Thread scheduleThread;
 	std::thread thr;
 public:
-	SingleThreadSystem(MultiThreadedSystem *ms, int id) : thr(&SingleThreadSystem::run, this) {}
+	SingleThreadSystem(MultiThreadedSystem *ms, int id);
 	void run();
 };
 
@@ -37,6 +37,7 @@ class MultiThreadedSystem : public System {
 	pthread_t masterThreadTid;
 	static std::shared_ptr<spdlog::logger> log;
 	SingleThreadSystem **singleThreadSystems;
+	int nThreads;
 public:
 	MultiThreadedSystem(int nThreads, int nMsg);
 	void init();
@@ -44,6 +45,7 @@ public:
 	void registerTask(Task *);
 	~MultiThreadedSystem();
 	Message *getMessage();
+	Message *getMessage(int nThread);
 	void releaseMessage(Message *msg);
 	Task *getTask(const char *name);
 	inline static std::shared_ptr<spdlog::logger> getLogger() { return log;}
@@ -69,22 +71,18 @@ SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms, int id) : BasicS
 
 
 
-MultiThreadedSystem::MultiThreadedSystem(int nThreads, int numOfMsg)
+MultiThreadedSystem::MultiThreadedSystem(int nThreads, int numOfMsg) : nThreads(nThreads)
 {
   masterThreadTid = tid;
   singleThreadSystems = new SingleThreadSystem*[nThreads];
-  for (int i = 0; i < nThreads; i++) {
+  for (int i = 0; i <= nThreads; i++) {
 	  singleThreadSystems[i] = new SingleThreadSystem(this, i);
-
   }
-
-
-
 }
 
 
 
-void init()
+void MultiThreadedSystem::init()
 {
 
 }
@@ -106,7 +104,11 @@ MultiThreadedSystem::~MultiThreadedSystem() {
 
 
 Message* MultiThreadedSystem::getMessage() {
-	return NULL;
+	if (tid != masterThreadTid) {
+		getLogger()->error("getMessage of multithread system can only be called on the main thread {}", masterThreadTid);
+		return NULL;
+	}
+	return singleThreadSystems[0]->getMessage();
 }
 
 
@@ -120,9 +122,27 @@ Task* MultiThreadedSystem::getTask(const char* name) {
 }
 
 
+
+class KTask : public Task {
+public:
+	KTask(const char *name): Task(name) {}
+	void execute(Message *msg) {
+		MultiThreadedSystem::getLogger()->info("KTask rcv msg {}", "yaron");
+	}
+};
+
+
+
 int main(int argc, char *argv[])
 {
 	MultiThreadedSystem sys(2, 200);
 	MultiThreadedSystem::getLogger()->info("Application starting master thread {}", tid);
+	Message *msg = sys.getMessage();
+	KTask ktask("bob");
+	msg->type = initMsg;
+	msg->dst = &ktask;
+
+	sys.postMsg(msg);
+
 	return 0;
 }

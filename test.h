@@ -17,7 +17,7 @@ class TestServer : public Task, public TcpSocket {
   std::map<int, TcpSocket *> serverMap;
   int rx;
 public:
- TestServer(System *s) : Task(s, "test_task"), TcpSocket(this), rx(0) {}
+ TestServer(System *s, EpollTask *pollTask) : Task(s, "test_task"), TcpSocket(this, pollTask), rx(0) {}
   ~TestServer() {}
   void execute(Message *msg);
   
@@ -27,7 +27,7 @@ public:
 class TestClient : public Task, public TcpSocket {
   char txBuf[1024];
 public:
- TestClient(System *s) : Task(s, "test_task"), TcpSocket(this) {}
+ TestClient(System *s, EpollTask *pollTask) : Task(s, "test_task"), TcpSocket(this, pollTask) {}
   ~TestClient() {}
   void execute(Message *msg);
   void processConnectMsg(Message *msg);
