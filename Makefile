@@ -2,6 +2,7 @@
 CC = g++
 CC_FLAGS = -w -g -std=c++11
 LD_LIBS = -lpcap -pthread
+LD_FLAGS = -g
 # File names
 EXEC = run
 SOURCES = $(wildcard *.cpp)
@@ -11,7 +12,7 @@ all: $(EXEC)
 
 # Main target
 $(EXEC): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXEC) $(LD_LIBS)
+	$(CC) $(OBJECTS) -o $(EXEC) $(LD_LIBS) $(LD_FLAGS)
 
 # To obtain object files
 %.o: %.cpp

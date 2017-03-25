@@ -53,15 +53,26 @@ public:
 
 void SingleThreadSystem::run()
 {
+	int port = 10000 + idx;
+	std::string portStr = std::to_string(port);
 	MultiThreadedSystem::getLogger()->info("SingleThreadSystem thread created with idx={}", idx);
+	proxyTask.config.set("server", "true");
+	proxyTask.config.set("ipaddress", "127.0.0.1");
+	proxyTask.config.set("port", portStr.c_str());
+	Message *msg = getMessage();
+	msg->type = initMsg;
+	msg->dst = &proxyTask;
+	postMsg(msg);
+	getScheduler()->setIdleTask(&pollTask);
 	scheduleThread.loop();
 }
+
 
 std::shared_ptr<spdlog::logger> MultiThreadedSystem::log = spdlog::stdout_color_mt("console");
 
 SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms, int id) : BasicSystem(1000), parent(ms), idx(id),
-		pollTask(this, "pollTask", 100, 100), proxyTask(idx, this, &pollTask),
-		scheduleThread(this->getScheduler())
+		pollTask(this, "epollTask", 100, 100), proxyTask(idx, this, &pollTask),
+		scheduleThread(this->getScheduler()), thr([=] {run();})
 {
 	MultiThreadedSystem::getLogger()->info("SingleThreadSystem created with idx={}", id);
 }
@@ -143,6 +154,7 @@ int main(int argc, char *argv[])
 	msg->dst = &ktask;
 
 	sys.postMsg(msg);
-
+	while(true)
+		sleep(1);
 	return 0;
 }

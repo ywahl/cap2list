@@ -18,8 +18,6 @@ void ProxyTask::processConnectMsg(Message *msg)
   if (infd == -1)
     return;
 
-  close(infd);
-  return;
   TcpSocket *serverSocket = new TcpSocket(static_cast<TcpSocket *>(this), infd);
   serverMap[infd] = serverSocket;
   std::cout << "Server client connected" << std::endl;
