@@ -24,12 +24,10 @@ class SingleThreadSystem : public BasicSystem {
 	Thread scheduleThread;
 	std::thread thr;
 public:
+    	SingleThreadSystem(MultiThreadedSystem *ms);
 	SingleThreadSystem(MultiThreadedSystem *ms, int id);
 	void run();
 };
-
-
-
 
 
 
@@ -40,6 +38,7 @@ class MultiThreadedSystem : public System {
 	int nThreads;
 public:
 	MultiThreadedSystem(int nThreads, int nMsg);
+  	inline static std::shared_ptr<spdlog::logger> getLogger() { return log;}
 	void init();
 	void postMsg(Message *d);
 	void registerTask(Task *);
@@ -48,7 +47,7 @@ public:
 	Message *getMessage(int nThread);
 	void releaseMessage(Message *msg);
 	Task *getTask(const char *name);
-	inline static std::shared_ptr<spdlog::logger> getLogger() { return log;}
+        void startLoop();
 };
 
 void SingleThreadSystem::run()
@@ -70,6 +69,7 @@ void SingleThreadSystem::run()
 
 std::shared_ptr<spdlog::logger> MultiThreadedSystem::log = spdlog::stdout_color_mt("console");
 
+
 SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms, int id) : BasicSystem(1000), parent(ms), idx(id),
 		pollTask(this, "epollTask", 100, 100), proxyTask(idx, this, &pollTask),
 		scheduleThread(this->getScheduler()), thr([=] {run();})
@@ -80,13 +80,23 @@ SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms, int id) : BasicS
 
 
 
+SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms) : BasicSystem(1000), parent(ms), idx(0),
+		pollTask(this, "epollTask", 100, 100), proxyTask(idx, this, &pollTask),
+		scheduleThread(this->getScheduler())
+{
+	MultiThreadedSystem::getLogger()->info("SingleThreadSystem created with idx={}", idx);
+}
+
 
 
 MultiThreadedSystem::MultiThreadedSystem(int nThreads, int numOfMsg) : nThreads(nThreads)
 {
   masterThreadTid = tid;
   singleThreadSystems = new SingleThreadSystem*[nThreads];
-  for (int i = 0; i <= nThreads; i++) {
+  //Master Thread
+  singleThreadSystems[0] = new SingleThreadSystem(this);
+  //Child Threads
+  for (int i = 1; i <= nThreads; i++) {
 	  singleThreadSystems[i] = new SingleThreadSystem(this, i);
   }
 }
@@ -105,6 +115,7 @@ void MultiThreadedSystem::registerTask(Task *t)
 
 void MultiThreadedSystem::postMsg(Message *msg)
 {
+  singleThreadSystems[0]->postMsg(msg);
 }
 
 
@@ -128,6 +139,11 @@ void MultiThreadedSystem::releaseMessage(Message* msg) {
 }
 
 
+void MultiThreadedSystem::startLoop() {
+  singleThreadSystems[0]->run();
+}
+
+
 Task* MultiThreadedSystem::getTask(const char* name) {
 	return NULL;
 }
@@ -147,14 +163,14 @@ public:
 int main(int argc, char *argv[])
 {
 	MultiThreadedSystem sys(2, 200);
-	MultiThreadedSystem::getLogger()->info("Application starting master thread {}", tid);
+	MultiThreadedSystem::getLogger()->info("Application starting master thread: {}", tid);
 	Message *msg = sys.getMessage();
 	KTask ktask("bob");
 	msg->type = initMsg;
 	msg->dst = &ktask;
 
 	sys.postMsg(msg);
-	while(true)
-		sleep(1);
+	MultiThreadedSystem::getLogger()->info("Starting master thread scheduling loop: {}", tid);
+	sys.startLoop();
 	return 0;
 }
