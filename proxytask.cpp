@@ -8,19 +8,22 @@
 #include "proxytask.h"
 
 
+
+
 void ProxyTask::processConnectMsg(Message *msg)
 {
   EpollMsgData *data = reinterpret_cast<EpollMsgData *>(msg->smallData);
   struct sockaddr in_addr;
   socklen_t in_len = sizeof(in_addr);
-
-  int infd = accept(data->fd, &in_addr, &in_len);
-  if (infd == -1)
-    return;
+  std::cout << "Server client connected: " << std::endl;
+  int infd = data->fd;
+  //int infd = accept(data->fd, &in_addr, &in_len);
+  //if (infd == -1)
+  //  return;
 
   TcpSocket *serverSocket = new TcpSocket(static_cast<TcpSocket *>(this), infd);
   serverMap[infd] = serverSocket;
-  std::cout << "Server client connected" << std::endl;
+  std::cout << "Server client connected: " << infd << " TcpSocket: " << serverSocket << std::endl;
 
 }
 
@@ -43,7 +46,7 @@ void ProxyTask::execute(Message *msg)
       if (buffer == NULL)
     	  break;
       rx++;
-      if ((rx & 0xffff) == 0)
+      //      if ((rx & 0xffff) == 0)
 	std::cout << "rx = " << rx << std::endl;
 
       TcpSocket *peer = serverMap[data->fd];

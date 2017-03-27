@@ -58,7 +58,7 @@ void TcpSocket::server(const char *bindAddr, int port)
 	if (listen (s, SOMAXCONN) < 0)
 		throw std::runtime_error("cannot list socket to address");
 
-	Message *msg = EpollTask::prepareMsg(parentTask, eventTask, subscribeMsg, s ,EPOLLIN);
+	Message *msg = EpollTask::prepareMsg(parentTask, eventTask, subscribeMsg, s ,EPOLLIN, true);
 	parentTask->getSystem()->postMsg(msg);
 }
 
