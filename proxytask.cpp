@@ -4,8 +4,14 @@
  *  Created on: Jan 27, 2017
  *      Author: awahl
  */
+#include "spdlog/spdlog.h"
 #include <iostream>
+#include <thread>
+#include "queue.h"
+#include "poll.h"
 #include "proxytask.h"
+#include "multhreadedsystem.h"
+
 
 
 
@@ -23,8 +29,7 @@ void ProxyTask::processConnectMsg(Message *msg)
 
   TcpSocket *serverSocket = new TcpSocket(static_cast<TcpSocket *>(this), infd);
   serverMap[infd] = serverSocket;
-  std::cout << "Server client connected: " << infd << " TcpSocket: " << serverSocket << std::endl;
-
+  MultiThreadedSystem::getLogger()->info("Server client connected: {}", infd);
 }
 
 

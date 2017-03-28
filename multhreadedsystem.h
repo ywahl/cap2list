@@ -23,7 +23,7 @@ class MultiThreadedSystem : public System {
 	int nThreads;
 public:
 	MultiThreadedSystem(int nThreads, int nMsg);
-  	inline static std::shared_ptr<spdlog::logger> getLogger() { return log;}
+  	static std::shared_ptr<spdlog::logger> getLogger();
 	void init();
 	void postMsg(Message *d);
 	void registerTask(Task *);

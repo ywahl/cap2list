@@ -32,6 +32,10 @@ void SingleThreadSystem::run()
 
 std::shared_ptr<spdlog::logger> MultiThreadedSystem::log = spdlog::stdout_color_mt("console");
 
+std::shared_ptr<spdlog::logger> MultiThreadedSystem::getLogger()
+{
+  return log;
+}
 
 SingleThreadSystem::SingleThreadSystem(MultiThreadedSystem *ms, int id) : BasicSystem(1000), parent(ms), idx(id),
 		pollTask(this, "epollTask", 100, 100), proxyTask(idx, this, &pollTask),
