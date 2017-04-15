@@ -33,12 +33,21 @@ void ProxyTask::processConnectMsg(Message *msg)
 }
 
 
+void ProxyTask::initMultiThreadSystem()
+{
+	//Check if master task
+	if (getSingleThreadSystem()->getIdx() == 0)
+		return;
+	clients = new TcpSocket(this , evtTsk)
+}
+
 
 void ProxyTask::execute(Message *msg)
 {
   switch(msg->type) {
   case initMsg:
     init(msg);
+    initMultiThreadSystem();
     break;
   case connectedMsg:
     processConnectMsg(msg);
@@ -76,8 +85,5 @@ void ProxyTask::execute(Message *msg)
   }
   system->releaseMessage(msg);
 }
-
-
-
 
 

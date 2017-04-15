@@ -9,8 +9,9 @@ class SingleThreadSystem : public BasicSystem {
 	Thread scheduleThread;
 	std::thread thr;
 public:
-    	SingleThreadSystem(MultiThreadedSystem *ms);
+    SingleThreadSystem(MultiThreadedSystem *ms);
 	SingleThreadSystem(MultiThreadedSystem *ms, int id);
+	int getIdx() { return idx;}
 	void run();
 };
 
