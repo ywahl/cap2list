@@ -1,3 +1,5 @@
+#ifndef MULTITHREADEDSYSTEM_H_
+#define MULTITHREADEDSYSTEM_H_
 class MultiThreadedSystem;
 
 
@@ -35,3 +37,5 @@ public:
 	Task *getTask(const char *name);
         void startLoop();
 };
+
+#endif /* MULTITHREADEDSYSTEM_H_ */

@@ -12,18 +12,20 @@
 #include "sockets.h"
 
 
+
 class ProxyTask : public Task, public TcpSocket {
 	std::map<int, TcpSocket *> serverMap;
+	int idx;
 	int rx;
 	int state;
 	TcpSocket *clients;
 public:
-	 ProxyTask(int portOffset, SingleThreadSystem *s, EpollTask *evtTsk) : Task(s, "ProxyTask"), TcpSocket(this, evtTsk), rx(0) {}
+	 ProxyTask(int portOffset, System *s, EpollTask *evtTsk) : Task(s, "ProxyTask"), TcpSocket(this, evtTsk), idx(portOffset), rx(0) {}
 	  ~ProxyTask() {}
 	  void execute(Message *msg);
+private:
 	  void processConnectMsg(Message *msg);
-	  SingleThreadSystem *getSingleThreadSystem() { return (SingleThreadSystem *)system;}
-	  void initMultiThreadSystem();
+	  void initMultiThreadSystem(Message *msg);
 };
 
 

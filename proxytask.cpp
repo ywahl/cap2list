@@ -21,7 +21,6 @@ void ProxyTask::processConnectMsg(Message *msg)
   EpollMsgData *data = reinterpret_cast<EpollMsgData *>(msg->smallData);
   struct sockaddr in_addr;
   socklen_t in_len = sizeof(in_addr);
-  std::cout << "Server client connected: " << std::endl;
   int infd = data->fd;
   //int infd = accept(data->fd, &in_addr, &in_len);
   //if (infd == -1)
@@ -29,16 +28,20 @@ void ProxyTask::processConnectMsg(Message *msg)
 
   TcpSocket *serverSocket = new TcpSocket(static_cast<TcpSocket *>(this), infd);
   serverMap[infd] = serverSocket;
-  MultiThreadedSystem::getLogger()->info("Server client connected: {}", infd);
+  MultiThreadedSystem::getLogger()->info("Proxy task id={} Server client connected: {}", idx, infd);
 }
 
 
-void ProxyTask::initMultiThreadSystem()
+void ProxyTask::initMultiThreadSystem(Message *msg)
 {
 	//Check if master task
-	if (getSingleThreadSystem()->getIdx() == 0)
+	if (idx == 0)
 		return;
-	clients = new TcpSocket(this , evtTsk)
+	clients = new TcpSocket(this , eventTask);
+	config.unset("server");
+	config.set("ipaddress", "127.0.0.1");
+	config.set("port", "10000");
+	clients->init(msg);
 }
 
 
@@ -47,7 +50,7 @@ void ProxyTask::execute(Message *msg)
   switch(msg->type) {
   case initMsg:
     init(msg);
-    initMultiThreadSystem();
+    initMultiThreadSystem(msg);
     break;
   case connectedMsg:
     processConnectMsg(msg);

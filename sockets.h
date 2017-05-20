@@ -30,9 +30,10 @@ enum SocketRxTxState {
 };
 
 class TcpSocket : public virtual Object {
+protected:
 	int s;
 	bool srv;
-	Task *eventTask;
+	EpollTask *eventTask;
 	Task *parentTask;
 	TcpSocket *parentSocket;
 	SocketRxTxState txState, rxState;

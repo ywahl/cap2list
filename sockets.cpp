@@ -98,7 +98,6 @@ void TcpSocket::client(const char *clientAddr, int port)
 
 void TcpSocket::init(Message *msg)
 {
-	eventTask = parentTask->system->getTask("epollTask");
 	srv = parentTask->config.get("server", true);
 
 	const char *ipaddr = parentTask->config.get("ipaddress");
