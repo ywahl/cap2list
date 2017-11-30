@@ -9,28 +9,27 @@
 #include <iostream>
 #include "queue.h"
 #include "poll.h"
-#include "sockets.h"
 #include "timer.h"
-#include "config.h"
-#include "test.h"
 #include "pcapintf.h"
+#include <spdlog/spdlog.h>
 
+
+namespace spd = spdlog;
 
 int main(int argc, char *argv[])
 {
 	int opt;
-	bool server = true;
-	char *dest = NULL;
-	std::cout << sizeof(int) << " " << sizeof(long) << std::endl;
+    auto logger = spd::stdout_color_mt("logger");
+    spd::register_logger(logger);
+	char *dest = nullptr;
 
 	while((opt = getopt(argc, argv, "sc:")) != -1) {
 		switch(opt) {
 		case 's':
-			server = true;
 			break;
 		case 'c':
+            logger->info("args optarg: {}", optarg);
 			dest = optarg;
-			server= false;
 			break;
 		default:
 			std::cerr << "error" << std::endl;
@@ -57,30 +56,6 @@ int main(int argc, char *argv[])
 	msg->type = initMsg;
 	s.postMsg(msg);
 	thread1.loop();
-
-
-//
-//	if (server) {
-//	  TestServer testTask(&s);
-//	  std::cout << "Running in server mode" << std::endl;
-//	  testTask.config.set("server", "true");
-//	  testTask.config.set("ipaddress", "127.0.0.1");
-//	  bool testValue = testTask.config.get("server");
-//	  msg = s.getMessage();
-//	  msg->dst = &testTask;
-//	  msg->type = initMsg;
-//	  s.postMsg(msg);
-//	  thread1.loop();
-//	} else {
-//	  TestClient testTask(&s);
-//	  std::cout << "Running in client mode" << std::endl;
-//	  testTask.config.set("ipaddress", "127.0.0.1");
-//	  msg = s.getMessage();
-//	  msg->dst = &testTask;
-//	  msg->type = initMsg;
-//	  s.postMsg(msg);
-//	  thread1.loop();
-//	}
 
 	return 0;
 }
