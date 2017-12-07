@@ -76,7 +76,7 @@ public:
 	}
 };
 
-#define MAX_BUFFER_SZ 8192
+#define MAX_BUFFER_SZ 2048
 
 
 int make_socket_non_blocking (int sfd);
