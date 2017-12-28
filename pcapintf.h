@@ -21,13 +21,17 @@ class Packet {
     int dstPort;
     int ipOffset, payloadOffset;
     int prot, iplen;
+    int switchDirection;
     std::shared_ptr<spdlog::logger> logger;
+
 
 public:
     Packet(const u_char *pkt, size_t len);
     void *getKey() { return key;}
     int getKeyLen() { return key_len;}
     int getPayloadOffset() {return payloadOffset;}
+
+    int getSwitchDirection() const;
 };
 
 

@@ -31,6 +31,8 @@ Packet::Packet(const u_char *packet, size_t len)
     const u_char *ptr;
     struct ether_header *ethhdr;
 
+    switchDirection = 0;
+
     ptr = packet + sizeof(struct ether_header);
     ethhdr = (struct ether_header*) packet;
     key_len = -1;
@@ -48,6 +50,8 @@ Packet::Packet(const u_char *packet, size_t len)
                 tcp_hdr = (struct tcphdr *) (ptr + iplen);
                 dstPort = ntohs(tcp_hdr->dest);
                 srcPort = ntohs(tcp_hdr->source);
+                if (dstPort > srcPort)
+                    switchDirection = 1;
                 payloadOffset += 4 * tcp_hdr->doff;
                 logger->info("ipoffset={} iplen={} tcp doff={}", ipOffset, iplen, tcp_hdr->doff);
                 break;
@@ -55,8 +59,18 @@ Packet::Packet(const u_char *packet, size_t len)
                 udp_hdr = (struct udphdr *) (ptr + iplen);
                 dstPort = ntohs(udp_hdr->dest);
                 srcPort = ntohs(udp_hdr->source);
+                if (dstPort > srcPort)
+                    switchDirection = 1;
                 payloadOffset += sizeof(struct udphdr);
                 break;
+        }
+        if (switchDirection) {
+            u_int32_t tmpAddr = ip_hdr->daddr;
+            ip_hdr->daddr = ip_hdr->saddr;
+            ip_hdr->saddr = tmpAddr;
+            int tmpPort = dstPort;
+            dstPort = srcPort;
+            srcPort = tmpPort;
         }
         //5 Tuple key
         u_char *ptr = key;
@@ -78,6 +92,10 @@ Packet::Packet(const u_char *packet, size_t len)
     }
     else
         logger->info("Non-IP packet {}", ntohs(ethhdr->ether_type));
+}
+
+int Packet::getSwitchDirection() const {
+    return switchDirection;
 }
 
 
@@ -148,9 +166,11 @@ void PcapInterface::processPacket(const struct pcap_pkthdr *hdr, const u_char *p
 
     KafkaMessage *kafkaMessage = (KafkaMessage *)(message->data);
     kafkaMessage->init(packet.getKey(), packet.getKeyLen());
-    int offset = packet.getPayloadOffset();
+    int tmp = packet.getSwitchDirection();
     kafkaMessage->addData(&hdr->ts, sizeof(timeval));
-    kafkaMessage->addData(&offset, sizeof(int));
+    kafkaMessage->addData(&tmp, sizeof(tmp));
+    tmp = packet.getPayloadOffset();
+    kafkaMessage->addData(&tmp, sizeof(int));
     kafkaMessage->addData(pkt, len);
     system->postMsg(message);
 }
