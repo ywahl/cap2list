@@ -29,9 +29,9 @@ int main(int argc, char *argv[])
     auto logger = spd::stdout_color_mt("logger");
 
 	char *dest = nullptr;
-    char *filter = "not port 22 and not port 9092";
-    char *dev = "eth0";
-    char *topic = "packets";
+    const char *filter = "not port 22 and not port 9092";
+    const char *dev = "eth0";
+    const char *topic = "packets";
     char *broker = nullptr;
 
 	while((opt = getopt(argc, argv, "i:f:t:b:")) != -1) {
@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
             broker = optarg;
             break;
 		default:
-
 			std::cerr << "error" << std::endl;
 			break;
 		}
