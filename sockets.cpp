@@ -58,7 +58,7 @@ void TcpSocket::server(const char *bindAddr, int port)
 	if (listen (s, SOMAXCONN) < 0)
 		throw std::runtime_error("cannot list socket to address");
 
-	Message *msg = EpollTask::prepareMsg(parentTask, eventTask, subscribeMsg, s ,EPOLLIN);
+	Message *msg = EpollTask::prepareMsg(parentTask, eventTask, subscribeMsg, s ,EPOLLIN, true);
 	parentTask->getSystem()->postMsg(msg);
 }
 
@@ -110,12 +110,14 @@ void TcpSocket::init(Message *msg)
 	return client(ipaddr, port);
 }
 
-void TcpSocket::processConnectMsg(Message *msg)
+TcpSocket *TcpSocket::processConnectMsg(Message *msg)
 {
-	if (srv) {
-		std::cout << "Srv Connected" << std::endl;
+    EpollMsgData *data = reinterpret_cast<EpollMsgData *>(msg->smallData);
+    if (srv) {
+	    std::cout << "Srv Connected fd:" << data->fd << std::endl;
 	}
 	txState = rxState = sockRxTxActive;
+    return new TcpSocket(this, data->fd);
 }
 
 void TcpSocket::processDisconnectMsg(Message *msg)
@@ -123,9 +125,11 @@ void TcpSocket::processDisconnectMsg(Message *msg)
 
 }
 
-void TcpSocket::processReadMsg(Message *msg)
+char *TcpSocket::processReadMsg(Message *msg, int *len)
 {
-
+    EpollMsgData *msgData = reinterpret_cast<EpollMsgData *>(msg->smallData);
+    char *buffer = EpollTask::readBuffer(parentTask, eventTask, msgData->fd, len);
+    return buffer;
 }
 
 //Write Q was full. The event Task sends a write msg to notify us that we can start sending
@@ -146,14 +150,14 @@ void TcpSocket::processWriteMsg(Message *msg)
 	sendBuffer(txStopPtr, txStopLen);
 }
 
-int TcpSocket::sendBuffer(char *buf, int len)
+int TcpSocket::sendBuffer(void *buf, int len)
 {      
   int wlen = 0;
   if (txState == sockRxTxActive) {
     wlen = write(s, buf, len);
     if (len != wlen) {
 
-      txStopPtr = buf + wlen;
+      txStopPtr = (char *)buf + wlen;
       txStopLen = len - wlen;
       std::cerr << "write Q full len=" << len << " wlen=" << wlen << " txStopLen=" << txStopLen <<  std::endl;
       txState = sockRxTxStopped;

@@ -1,7 +1,7 @@
 # Declaration of variables
 CC = g++
 CC_FLAGS = -w -g -std=c++11
-LD_LIBS = -lpcap
+LD_LIBS = -lpcap -lrdkafka
 # File names
 EXEC = run
 SOURCES = $(wildcard *.cpp)

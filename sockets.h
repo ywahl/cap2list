@@ -44,7 +44,7 @@ public:
         TcpSocket(TcpSocket *parentSocket, int p);
 	~TcpSocket();
 
-	int sendBuffer(char *buf, int len);
+	int sendBuffer(void *buf, int len);
 	void server(const char *bindAddr, int port);
 	void client(const char *clientAddr, int port);
 	int setsockopt(int level, int optname, const void *optval, socklen_t optlen);
@@ -52,9 +52,9 @@ public:
 
 	//Handlers do not release or acquire resources
 	void init(Message *);
-	void processConnectMsg(Message *);
+	TcpSocket *processConnectMsg(Message *);
 	void processDisconnectMsg(Message *);
-	void processReadMsg(Message *);
+	char *processReadMsg(Message *, int *len);
 	void processWriteMsg(Message *);
 };
 

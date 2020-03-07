@@ -121,6 +121,9 @@ void EpollTask::unSubscribe(const EpollMsgData *data, Task *src)
 		if (s == -1) {
 		}
 	}
+	if (data->autocreate) {
+	    close(data->fd);
+	}
 	std::cout << "EpollTask::unSubscribe " << src->getId() << std::endl;
 }
 
@@ -177,6 +180,7 @@ void EpollTask::poll(int w)
 
 	for (i = 0; i < n; i++) {
 		event = events + i;
+        
 		EpollFD *fd = fds + event->data.fd;
 
 		//Error on socket

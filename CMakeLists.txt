@@ -22,7 +22,7 @@ set(SOURCE_FILES
         test.cpp
         test.h
         timer.cpp
-        timer.h kafkaproducer.cpp kafkaproducer.h)
+        timer.h kafkaproducer.cpp kafkaproducer.h httpserver.h httpserver.cpp)
 
 add_executable(cap2list ${SOURCE_FILES})
 target_link_libraries(cap2list pcap Threads::Threads rdkafka)

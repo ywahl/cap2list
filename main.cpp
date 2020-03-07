@@ -5,14 +5,14 @@
  *  Created on: Oct 1, 2014
  *      Author: awahl
  */
+
 #include <unistd.h>
 #include <iostream>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include "queue.h"
 #include "poll.h"
 #include "timer.h"
-#include "pcapintf.h"
-#include "kafkaproducer.h"
-#include <spdlog/spdlog.h>
+#include "httpserver.h"
 
 
 namespace spd = spdlog;
@@ -58,36 +58,22 @@ int main(int argc, char *argv[])
 			std::cerr << "error" << std::endl;
 			break;
 		}
-	}
-	if (broker == nullptr)
-		return usage(argv);
-    logger->set_level(spd::level::warn);
+    	}
+    logger->set_level(spd::level::info);
 	BasicSystem s(1000);
 	EpollTask epollTask(&s, "epollTask", 100, 100);
 	TimerTask timerTask(&s);
-	KafkaProducer kafkaProducerTask(&s);
+	HttpServer httpServer(&s);
+
 	timerTask.config.set("timeout", "500");
 	s.getScheduler()->setIdleTask(&epollTask);
 	Thread thread1(s.getScheduler());
 
 	Message *msg = s.getMessage();
 	msg->type = initMsg;
-	msg->dst = &timerTask;
-	msg->data = &epollTask;
+	msg->dst = &httpServer;
 	s.postMsg(msg);
-	PcapInterface pcapTask(&s);
-	pcapTask.config.set("dev", dev);
-	pcapTask.config.set("filter", filter);
-	msg = s.getMessage();
-	msg->dst = &pcapTask;
-	msg->type = initMsg;
-	s.postMsg(msg);
-    msg = s.getMessage();
-    kafkaProducerTask.config.set("topic", topic);
-    kafkaProducerTask.config.set("broker", broker);
-    msg->dst = &kafkaProducerTask;
-	msg->type = initMsg;
-    s.postMsg(msg);
+
 	thread1.loop();
 
 	return 0;
